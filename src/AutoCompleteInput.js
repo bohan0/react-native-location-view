@@ -60,13 +60,15 @@ export default class AutoCompleteInput extends React.Component {
     apiKey: PropTypes.string.isRequired,
     language: PropTypes.string,
     debounceDuration: PropTypes.number.isRequired,
-    sessionToken: PropTypes.string.isRequired,
+    sessionToken: PropTypes.string,
     useArcGISAutocomplete: PropTypes.bool,
     countryCode: PropTypes.string
   };
 
   static defaultProps = {
-    language: "en"
+    language: "en",
+    useArcGISAutocomplete: false,
+    countryCode: "au"
   };
 
   constructor(props) {
@@ -124,19 +126,16 @@ export default class AutoCompleteInput extends React.Component {
   _request(text) {
     this._abortRequest();
     if (text.length >= 3) {
-      const countryCode = this.props.countryCode
-        ? this.props.countryCode
-        : "AU"; //default country = Australia
       const google_autocomplete_url = `${AUTOCOMPLETE_URL}?input=${encodeURIComponent(
         text
       )}&key=${this.props.apiKey}&language=${
         this.props.language
-      }&sessiontoken=${
-        this.props.sessionToken
-      }&components=country:${countryCode}`;
+      }&sessiontoken=${this.props.sessionToken}&components=country:${
+        this.props.countryCode
+      }`;
       const arcgis_autocomplete_url = `${ARCGIS_AUTOCOMPLETE_URL}?text=${encodeURIComponent(
         text
-      )}&countryCode=${countryCode}&f=json`;
+      )}&countryCode=${this.props.countryCode}&f=json`;
       console.log(google_autocomplete_url);
       fetch(
         this.props.useArcGISAutocomplete
