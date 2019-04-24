@@ -34,14 +34,20 @@ export default class LocationView extends React.Component {
     actionTextStyle: Text.propTypes.style,
     actionText: PropTypes.string,
     onLocationSelect: PropTypes.func,
-    debounceDuration: PropTypes.number
+    debounceDuration: PropTypes.number,
+    countryCode: PropTypes.string,
+    language: PropTypes.string,
+    onCancel: PropTypes.func
   };
 
   static defaultProps = {
     markerColor: "black",
     actionText: "DONE",
     onLocationSelect: () => ({}),
-    debounceDuration: 300
+    debounceDuration: 300,
+    countryCode: "au",
+    language: "en",
+    onCancel: () => ({})
   };
 
   constructor(props) {
@@ -60,7 +66,6 @@ export default class LocationView extends React.Component {
       UIManager.setLayoutAnimationEnabledExperimental &&
         UIManager.setLayoutAnimationEnabledExperimental(true);
     }
-    this.state = { sessionToken: uuid.v4() };
   }
 
   componentDidMount() {
@@ -84,6 +89,7 @@ export default class LocationView extends React.Component {
   }
 
   state = {
+    sessionToken: uuid.v4(),
     inputScale: new Animated.Value(1),
     inFocus: false,
     region: {
@@ -127,13 +133,13 @@ export default class LocationView extends React.Component {
 
   _onPlaceSelected(placeId) {
     this._input.blur();
-    fetch(
-      `${PLACE_DETAIL_URL}?key=${
-        this.props.apiKey
-      }&placeid=${placeId}&fields=${encodeURIComponent(
-        "geometry,address_component,adr_address"
-      )}&sessiontoken=${this.state.sessionToken}`
-    )
+    const place_details_url = `${PLACE_DETAIL_URL}?key=${
+      this.props.apiKey
+    }&placeid=${placeId}&fields=geometry,address_component,adr_address&sessiontoken=${
+      this.state.sessionToken
+    }`;
+    console.log(place_details_url);
+    fetch(place_details_url)
       .then(response => response.json())
       .then(data => {
         console.log(data);
@@ -182,6 +188,9 @@ export default class LocationView extends React.Component {
             style={[styles.input, { transform: [{ scale: inputScale }] }]}
             debounceDuration={this.props.debounceDuration}
             sessionToken={this.state.sessionToken}
+            useArcGISAutocomplete={false}
+            countryCode={this.props.countryCode}
+            language={this.props.language}
           />
         </View>
         <TouchableOpacity
@@ -192,6 +201,15 @@ export default class LocationView extends React.Component {
           onPress={this._getCurrentLocation}
         >
           <MaterialIcons name={"my-location"} color={"white"} size={25} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.cancelButton,
+            { backgroundColor: this.props.markerColor }
+          ]}
+          onPress={this.props.onCancel}
+        >
+          <MaterialIcons name={"close"} color={"white"} size={25} />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, this.props.actionButtonStyle]}
@@ -240,6 +258,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 70,
     right: 10
+  },
+  cancelButton: {
+    backgroundColor: "#000",
+    padding: 5,
+    borderRadius: 5,
+    position: "absolute",
+    top: 10,
+    left: 10
   },
   actionButton: {
     backgroundColor: "#000",
