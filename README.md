@@ -2,7 +2,11 @@
 
 Simple location picker with maps and Google Places API support.
 
-This fork adds support for use of ArcGIS Suggest API for addresses autocomplete, which is much more affordable than Google Maps API Places Autocomplete
+This fork initially added countryCode restriction for autocomplete results, language and onCancel props (along with a close button on top left to match). Also improved the Google API calls to reduce costs (via sessionToken and only requesting the fields required).
+
+Please note that you need to install `react-native-uuid` and `buffer` npm packages.
+
+This fork intends to (in progress) to add support for use of ArcGIS Suggest API for addresses autocomplete (at the moment completely free), which is much more affordable than Google Maps API Places Autocomplete. Also intend use ArcGIS for address details/coordinates extraction as well (at least 90% more affordable than Google Places Details API as of 2019)
 
 ### Preview
 
