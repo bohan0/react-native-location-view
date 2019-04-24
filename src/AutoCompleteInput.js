@@ -106,7 +106,7 @@ export default class AutoCompleteInput extends React.Component {
     if (text.length >= 3) {
       const countryCode = this.props.countryCode ? this.props.countryCode : "AUS"; //default country = Australia
       const google_autocomplete_url = `${AUTOCOMPLETE_URL}?input=${encodeURIComponent(text)}&key=${this.props.apiKey}&language=${this.props.language}`;
-      const arcgis_autocomplete_url = `${ARCGIS_AUTOCOMPLETE_URL}?text=${encodeURIComponent(text)}&countryCode=${this.props.countryCode}`;
+      const arcgis_autocomplete_url = `${ARCGIS_AUTOCOMPLETE_URL}?text=${encodeURIComponent(text)}&countryCode=${this.props.countryCode}&f=json`;
       fetch(this.props.useArcGISAutocomplete ? arcgis_autocomplete_url : google_autocomplete_url, null, this)
         .then(res => res.json())
         .then(data => {
