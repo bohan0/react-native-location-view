@@ -45,6 +45,8 @@ const styles = StyleSheet.create({
 const AUTOCOMPLETE_URL = "https://maps.googleapis.com/maps/api/place/autocomplete/json";
 const REVRSE_GEO_CODE_URL = "https://maps.googleapis.com/maps/api/geocode/json";
 
+const ARCGIS_AUTOCOMPLETE_URL = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest"
+
 export default class AutoCompleteInput extends React.Component {
   static propTypes = {
     apiKey: PropTypes.string.isRequired,
@@ -102,7 +104,10 @@ export default class AutoCompleteInput extends React.Component {
   _request(text) {
     this._abortRequest();
     if (text.length >= 3) {
-      fetch(`${AUTOCOMPLETE_URL}?input=${encodeURIComponent(text)}&key=${this.props.apiKey}&language=${this.props.language}`, null, this)
+      const countryCode = this.props.countryCode ? this.props.countryCode : "AUS"; //default country = Australia
+      const google_autocomplete_url = `${AUTOCOMPLETE_URL}?input=${encodeURIComponent(text)}&key=${this.props.apiKey}&language=${this.props.language}`;
+      const arcgis_autocomplete_url = `${ARCGIS_AUTOCOMPLETE_URL}?text=${encodeURIComponent(text)}&countryCode=${this.props.countryCode}`;
+      fetch(this.props.useArcGISAutocomplete ? arcgis_autocomplete_url : google_autocomplete_url, null, this)
         .then(res => res.json())
         .then(data => {
           let {predictions} = data;
