@@ -1,39 +1,45 @@
-import React from 'react';
-import {TextInput, View, StyleSheet, Animated, TouchableOpacity} from "react-native";
+import React from "react";
+import {
+  TextInput,
+  View,
+  StyleSheet,
+  Animated,
+  TouchableOpacity
+} from "react-native";
 import AutoCompleteListView from "./AutoCompleteListView";
 import Events from "react-native-simple-events";
 import debounce from "../utils/debounce";
-import fetch from 'react-native-cancelable-fetch';
-import PropTypes from 'prop-types';
+import fetch from "react-native-cancelable-fetch";
+import PropTypes from "prop-types";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 const styles = StyleSheet.create({
   textInputContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     height: 40,
     zIndex: 99,
     paddingLeft: 10,
     borderRadius: 5,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     shadowOffset: {
       width: 0,
       height: 2
     },
     shadowRadius: 2,
     shadowOpacity: 0.24,
-    alignItems: 'center'
+    alignItems: "center"
   },
   textInput: {
     flex: 1,
     fontSize: 17,
-    color: '#404752'
+    color: "#404752"
   },
   btn: {
     width: 30,
     height: 30,
     padding: 5,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center",
+    alignItems: "center"
   },
   listViewContainer: {
     paddingLeft: 3,
@@ -42,26 +48,34 @@ const styles = StyleSheet.create({
   }
 });
 
-const AUTOCOMPLETE_URL = "https://maps.googleapis.com/maps/api/place/autocomplete/json";
+const AUTOCOMPLETE_URL =
+  "https://maps.googleapis.com/maps/api/place/autocomplete/json";
 const REVRSE_GEO_CODE_URL = "https://maps.googleapis.com/maps/api/geocode/json";
 
-const ARCGIS_AUTOCOMPLETE_URL = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest"
+const ARCGIS_AUTOCOMPLETE_URL =
+  "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest";
 
 export default class AutoCompleteInput extends React.Component {
   static propTypes = {
     apiKey: PropTypes.string.isRequired,
     language: PropTypes.string,
-    debounceDuration: PropTypes.number.isRequired
+    debounceDuration: PropTypes.number.isRequired,
+    sessionToken: PropTypes.string.isRequired,
+    useArcGISAutocomplete: PropTypes.bool,
+    countryCode: PropTypes.string
   };
 
   static defaultProps = {
-    language: 'en'
+    language: "en"
   };
 
   constructor(props) {
     super(props);
     this._onChangeText = this._onChangeText.bind(this);
-    this._request = debounce(this._request.bind(this), this.props.debounceDuration);
+    this._request = debounce(
+      this._request.bind(this),
+      this.props.debounceDuration
+    );
     this._abortRequest = this._abortRequest.bind(this);
     this.fetchAddressForLocation = this.fetchAddressForLocation.bind(this);
     this.blur = this.blur.bind(this);
@@ -87,16 +101,22 @@ export default class AutoCompleteInput extends React.Component {
   };
 
   fetchAddressForLocation(location) {
-    this.setState({loading: true, predictions: []});
-    let {latitude, longitude} = location;
-    fetch(`${REVRSE_GEO_CODE_URL}?key=${this.props.apiKey}&latlng=${latitude},${longitude}`, null, this)
+    this.setState({ loading: true, predictions: [] });
+    let { latitude, longitude } = location;
+    fetch(
+      `${REVRSE_GEO_CODE_URL}?key=${
+        this.props.apiKey
+      }&latlng=${latitude},${longitude}`,
+      null,
+      this
+    )
       .then(res => res.json())
       .then(data => {
-        this.setState({loading: false});
-        let {results} = data;
+        this.setState({ loading: false });
+        let { results } = data;
         if (results.length > 0) {
-          let {formatted_address} = results[0];
-          this.setState({text: formatted_address});
+          let { formatted_address } = results[0];
+          this.setState({ text: formatted_address });
         }
       });
   }
@@ -104,34 +124,52 @@ export default class AutoCompleteInput extends React.Component {
   _request(text) {
     this._abortRequest();
     if (text.length >= 3) {
-      const countryCode = this.props.countryCode ? this.props.countryCode : "AUS"; //default country = Australia
-      const google_autocomplete_url = `${AUTOCOMPLETE_URL}?input=${encodeURIComponent(text)}&key=${this.props.apiKey}&language=${this.props.language}`;
-      const arcgis_autocomplete_url = `${ARCGIS_AUTOCOMPLETE_URL}?text=${encodeURIComponent(text)}&countryCode=${this.props.countryCode}&f=json`;
-      fetch(this.props.useArcGISAutocomplete ? arcgis_autocomplete_url : google_autocomplete_url, null, this)
+      const countryCode = this.props.countryCode
+        ? this.props.countryCode
+        : "AU"; //default country = Australia
+      const google_autocomplete_url = `${AUTOCOMPLETE_URL}?input=${encodeURIComponent(
+        text
+      )}&key=${this.props.apiKey}&language=${
+        this.props.language
+      }&sessiontoken=${
+        this.props.sessionToken
+      }&components=country:${countryCode}`;
+      const arcgis_autocomplete_url = `${ARCGIS_AUTOCOMPLETE_URL}?text=${encodeURIComponent(
+        text
+      )}&countryCode=${countryCode}&f=json`;
+      console.log(google_autocomplete_url);
+      fetch(
+        this.props.useArcGISAutocomplete
+          ? arcgis_autocomplete_url
+          : google_autocomplete_url,
+        null,
+        this
+      )
         .then(res => res.json())
         .then(data => {
-          let {predictions} = data;
-          this.setState({predictions});
+          console.log(data);
+          let { predictions } = data;
+          this.setState({ predictions });
         });
     } else {
-      this.setState({predictions: []});
+      this.setState({ predictions: [] });
     }
   }
 
   _onChangeText(text) {
     this._request(text);
-    this.setState({text});
+    this.setState({ text });
   }
 
   _onFocus() {
     this._abortRequest();
-    this.setState({loading: false, inFocus: true});
-    Events.trigger('InputFocus');
+    this.setState({ loading: false, inFocus: true });
+    Events.trigger("InputFocus");
   }
 
   _onBlur() {
-    this.setState({inFocus: false});
-    Events.trigger('InputBlur');
+    this.setState({ inFocus: false });
+    Events.trigger("InputBlur");
   }
 
   blur() {
@@ -139,46 +177,42 @@ export default class AutoCompleteInput extends React.Component {
   }
 
   _onPressClear() {
-    this.setState({text: '', predictions: []});
+    this.setState({ text: "", predictions: [] });
   }
 
   _getClearButton() {
-    return this.state.inFocus ?
-      (<TouchableOpacity style={styles.btn} onPress={this._onPressClear}>
-        <MaterialIcons name={'clear'} size={20}/>
-      </TouchableOpacity>) : null;
+    return this.state.inFocus ? (
+      <TouchableOpacity style={styles.btn} onPress={this._onPressClear}>
+        <MaterialIcons name={"clear"} size={20} />
+      </TouchableOpacity>
+    ) : null;
   }
 
   getAddress() {
-    return this.state.loading ? '' : this.state.text;
+    return this.state.loading ? "" : this.state.text;
   }
 
   render() {
     return (
       <Animated.View style={this.props.style}>
-        <View
-          style={styles.textInputContainer}
-          elevation={5}
-        >
+        <View style={styles.textInputContainer} elevation={5}>
           <TextInput
-            ref={input => this._input = input}
-            value={this.state.loading ? 'Loading...' : this.state.text}
+            ref={input => (this._input = input)}
+            value={this.state.loading ? "Loading..." : this.state.text}
             style={styles.textInput}
-            underlineColorAndroid={'transparent'}
-            placeholder={'Search'}
+            underlineColorAndroid={"transparent"}
+            placeholder={"Enter address..."}
             onFocus={this._onFocus}
             onBlur={this._onBlur}
             onChangeText={this._onChangeText}
-            outlineProvider='bounds'
+            outlineProvider="bounds"
             autoCorrect={false}
             spellCheck={false}
           />
           {this._getClearButton()}
         </View>
         <View style={styles.listViewContainer}>
-          <AutoCompleteListView
-            predictions={this.state.predictions}
-          />
+          <AutoCompleteListView predictions={this.state.predictions} />
         </View>
       </Animated.View>
     );
