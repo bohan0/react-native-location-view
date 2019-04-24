@@ -2,6 +2,8 @@
 
 Simple location picker with maps and Google Places API support.
 
+This fork adds support for use of ArcGIS Suggest API for addresses autocomplete, which is much more affordable than Google Maps API Places Autocomplete
+
 ### Preview
 
 ![](https://github.com/superapp/react-native-location-view/blob/master/screenrecording/screengrab.gif?raw=true)
